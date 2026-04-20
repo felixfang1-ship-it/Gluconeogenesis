@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BIO 361 Gluconeogenesis Quiz</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>BIO 361 Gluconeogenesis Quiz</h1>
+      <p>42 multiple choice questions based on your notes.</p>
+    </header>
+
+    <section class="controls card">
+      <div class="row">
+        <label><input type="checkbox" id="shuffleQuestions" checked> Shuffle questions</label>
+        <label><input type="checkbox" id="shuffleChoices"> Shuffle answer choices</label>
+      </div>
+      <div class="row">
+        <button id="startBtn">Start Quiz</button>
+        <button id="restartBtn" class="secondary">Reset</button>
+      </div>
+    </section>
+
+    <section id="quizArea" class="hidden">
+      <div class="status card">
+        <div id="progressText">Question 1 / 42</div>
+        <div id="scoreText">Score: 0</div>
+      </div>
+
+      <div class="card">
+        <h2 id="questionText"></h2>
+        <div id="optionsContainer" class="options"></div>
+        <div class="nav-row">
+          <button id="prevBtn" class="secondary">Previous</button>
+          <button id="nextBtn">Next</button>
+          <button id="submitBtn" class="hidden">Submit Quiz</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="resultArea" class="hidden">
+      <div class="card">
+        <h2>Results</h2>
+        <p id="finalScore"></p>
+        <p id="finalPercent"></p>
+        <button id="reviewBtn">Review Wrong Answers</button>
+      </div>
+      <div id="reviewArea" class="hidden"></div>
+    </section>
+
+    <footer>
+      <p>Made for GitHub Pages. Open <code>index.html</code> locally or publish the folder.</p>
+    </footer>
+  </div>
+
+  <script src="questions.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
