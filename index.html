@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BIO 361 Gluconeogenesis Quiz</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f7fb;
+      color: #1e293b;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    header { margin-bottom: 20px; }
+    h1 { margin-bottom: 8px; }
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.08);
+      margin-bottom: 18px;
+    }
+    .row, .nav-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .status {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-weight: bold;
+    }
+    .options {
+      display: grid;
+      gap: 12px;
+      margin: 18px 0;
+    }
+    .option-btn {
+      width: 100%;
+      text-align: left;
+      padding: 14px 16px;
+      border: 2px solid #cbd5e1;
+      background: #fff;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .option-btn:hover { border-color: #64748b; }
+    .option-btn.selected {
+      border-color: #2563eb;
+      background: #eff6ff;
+    }
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 12px 18px;
+      cursor: pointer;
+      background: #2563eb;
+      color: white;
+      font-size: 15px;
+    }
+    button.secondary { background: #64748b; }
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+    .hidden { display: none; }
+    .review-item {
+      background: white;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.08);
+      margin-bottom: 14px;
+    }
+    .correct {
+      color: #166534;
+      font-weight: bold;
+    }
+    .incorrect {
+      color: #b91c1c;
+      font-weight: bold;
+    }
+    footer {
+      margin-top: 18px;
+      color: #475569;
+      font-size: 14px;
+    }
+    label { font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>BIO 361 Gluconeogenesis Quiz</h1>
+      <p>42 multiple choice questions based on your notes.</p>
+    </header>
+
+    <section class="controls card">
+      <div class="row">
+        <label><input type="checkbox" id="shuffleQuestions" checked> Shuffle questions</label>
+        <label><input type="checkbox" id="shuffleChoices"> Shuffle answer choices</label>
+      </div>
+      <div class="row">
+        <button id="startBtn" type="button">Start Quiz</button>
+        <button id="restartBtn" type="button" class="secondary">Reset</button>
+      </div>
+    </section>
+
+    <section id="quizArea" class="hidden">
+      <div class="status card">
+        <div id="progressText">Question 1 / 42</div>
+        <div id="scoreText">Answered: 0</div>
+      </div>
+
+      <div class="card">
+        <h2 id="questionText"></h2>
+        <div id="optionsContainer" class="options"></div>
+        <div class="nav-row">
+          <button id="prevBtn" type="button" class="secondary">Previous</button>
+          <button id="nextBtn" type="button">Next</button>
+          <button id="submitBtn" type="button" class="hidden">Submit Quiz</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="resultArea" class="hidden">
+      <div class="card">
+        <h2>Results</h2>
+        <p id="finalScore"></p>
+        <p id="finalPercent"></p>
+        <button id="reviewBtn" type="button">Review Wrong Answers</button>
+      </div>
+      <div id="reviewArea" class="hidden"></div>
+    </section>
+
+    <footer>
+      <p>Single-file version for GitHub Pages.</p>
+    </footer>
+  </div>
+
+  <script>
+    const questions = [
+      { q: "Where does pyruvate first go during the first bypass of gluconeogenesis?", options: ["Cytosol", "Nucleus", "Mitochondria", "ER lumen"], answer: 2 },
+      { q: "In active site 1 of pyruvate carboxylase, which molecule is picked up?", options: ["CO2 / HCO3-derived carbon", "ATP", "PEP", "Glucose"], answer: 0 },
+      { q: "What is the cofactor used by pyruvate carboxylase?", options: ["TPP", "Biotin", "NADH", "FAD"], answer: 1 },
+      { q: "What is the main role of biotin in pyruvate carboxylase?", options: ["It donates phosphate", "It carries activated CO2 between active sites", "It transfers electrons to NAD+", "It hydrolyzes GTP"], answer: 1 },
+      { q: "What happens at active site 2 of pyruvate carboxylase?", options: ["ATP is converted to GTP", "Oxaloacetate is converted to malate", "CO2 reacts with pyruvate to form oxaloacetate", "Pyruvate is reduced to lactate"], answer: 2 },
+      { q: "The pyruvate to oxaloacetate reaction is best classified as a:", options: ["Decarboxylation", "Carboxylation", "Dehydration", "Isomerization"], answer: 1 },
+      { q: "Which enzyme converts oxaloacetate to PEP?", options: ["Pyruvate kinase", "PEP carboxykinase", "Pyruvate carboxylase", "Hexokinase"], answer: 1 },
+      { q: "Which nucleotide is directly required for oxaloacetate to PEP?", options: ["ATP", "CTP", "GTP", "UTP"], answer: 2 },
+      { q: "According to lecture, the pyruvate to PEP bypass costs:", options: ["1 ATP only", "1 GTP only", "1 ATP and 1 GTP", "2 ATP only"], answer: 2 },
+      { q: "Why can oxaloacetate not simply leave the mitochondrion directly?", options: ["It is too large", "There is no transporter for oxaloacetate", "It is immediately degraded", "It cannot be reduced"], answer: 1 },
+      { q: "What molecule is oxaloacetate converted into for transport out of the mitochondrion?", options: ["Lactate", "Acetyl-CoA", "Malate", "Citrate"], answer: 2 },
+      { q: "Why does this bypass proceed through the mitochondria according to the lecture objective?", options: ["To generate more ATP", "To conserve NADH", "To use oxygen directly", "To activate hexokinase"], answer: 1 },
+      { q: "Which molecule is the key regulator of the PFK-1 / FBPase-1 control point?", options: ["Fructose-1-phosphate", "Fructose-2,6-bisphosphate", "Glucose-1,6-bisphosphate", "Ribose-5-phosphate"], answer: 1 },
+      { q: "High fructose-2,6-bisphosphate favors:", options: ["Glycogenolysis", "Gluconeogenesis", "Glycolysis", "Pentose phosphate pathway only"], answer: 2 },
+      { q: "High fructose-2,6-bisphosphate activates:", options: ["FBPase-1", "PFK-1", "Glucose-6-phosphatase", "PEP carboxykinase"], answer: 1 },
+      { q: "Low fructose-2,6-bisphosphate favors:", options: ["Glycolysis", "Gluconeogenesis", "Fermentation", "Glycogenesis only"], answer: 1 },
+      { q: "Which enzyme catalyzes fructose-1,6-bisphosphate to fructose-6-phosphate?", options: ["PFK-1", "PFK-2", "FBPase-1", "FBPase-2"], answer: 2 },
+      { q: "PFK-1 and FBPase-1 are best described as:", options: ["Enzymes that catalyze the same direction of the same pathway", "Reciprocally regulated enzymes controlling opposite pathways", "Two names for the same catalytic site", "Enzymes found only in mitochondria"], answer: 1 },
+      { q: "Fructose-2,6-bisphosphate is produced and broken down by a:", options: ["Transporter", "Bifunctional enzyme", "Zymogen", "Proteasome"], answer: 1 },
+      { q: "The two activities of the bifunctional enzyme are:", options: ["PFK-1 and FBPase-1", "PFK-2 and FBPase-2", "Hexokinase and glucokinase", "Pyruvate kinase and pyruvate carboxylase"], answer: 1 },
+      { q: "Activating PFK-2 will:", options: ["Decrease fructose-2,6-bisphosphate and inhibit glycolysis", "Increase fructose-2,6-bisphosphate and promote glycolysis", "Increase fructose-1,6-bisphosphate breakdown directly", "Activate glucose-6-phosphatase"], answer: 1 },
+      { q: "Activating FBPase-2 will:", options: ["Increase fructose-2,6-bisphosphate and promote glycolysis", "Decrease fructose-2,6-bisphosphate and promote gluconeogenesis", "Convert fructose-6-phosphate to glucose", "Consume GTP"], answer: 1 },
+      { q: "Which activity is associated with inducing gluconeogenesis at this control point?", options: ["Phosphoprotein phosphatase", "cAMP-dependent protein kinase", "Hexokinase", "Protein phosphatase 2A only"], answer: 1 },
+      { q: "Which activity is associated with inducing glycolysis at this control point?", options: ["cAMP-dependent protein kinase", "Phosphoprotein phosphatase", "PEP carboxykinase", "Glycogen phosphorylase"], answer: 1 },
+      { q: "Which enzyme catalyzes glucose-6-phosphate to glucose?", options: ["Hexokinase", "Glucose-6-phosphatase", "Phosphoglucose isomerase", "Glycogen phosphorylase"], answer: 1 },
+      { q: "Glucose-6-phosphatase is located in the:", options: ["Cytosol", "Mitochondrial matrix", "ER lumen", "Nucleus"], answer: 2 },
+      { q: "Why is glucose-6-phosphatase sequestered in the ER lumen?", options: ["To increase ATP synthesis", "To prevent reversion of glycolysis", "To bind insulin", "To generate NADPH"], answer: 1 },
+      { q: "The glucose-6-phosphate to glucose step is a:", options: ["Phosphorylation", "Dephosphorylation / hydrolysis", "Redox reaction", "Carboxylation"], answer: 1 },
+      { q: "After glucose is produced in the ER lumen, it is ultimately transferred to the:", options: ["Lysosome", "Blood capillary", "Nucleus", "Glycogen granule"], answer: 1 },
+      { q: "A phosphatase primarily:", options: ["Adds phosphate groups", "Removes phosphate groups", "Transfers electrons", "Adds CO2"], answer: 1 },
+      { q: "A kinase primarily:", options: ["Removes phosphate groups", "Adds phosphate groups", "Removes glucose", "Transfers oxygen"], answer: 1 },
+      { q: "The main difference between a kinase and a phosphatase is that:", options: ["One works only in the nucleus", "One adds phosphate, the other removes it", "One uses NADH, the other uses FAD", "One is reversible, the other is not"], answer: 1 },
+      { q: "A liver cell has low fructose-2,6-bisphosphate and active FBPase-2. Which pathway is favored?", options: ["Glycolysis", "Gluconeogenesis", "Glycogen synthesis only", "Pentose phosphate pathway only"], answer: 1 },
+      { q: "A mutation destroys the biotin-binding ability of pyruvate carboxylase. Which product would fail to form first?", options: ["Glucose", "Fructose-6-phosphate", "Oxaloacetate", "PEP"], answer: 2 },
+      { q: "Match the enzyme to the reaction: pyruvate to oxaloacetate", options: ["PEP carboxykinase", "Pyruvate carboxylase", "FBPase-1", "Glucose-6-phosphatase"], answer: 1 },
+      { q: "Match the enzyme to the reaction: oxaloacetate to PEP", options: ["Pyruvate kinase", "Pyruvate carboxylase", "PEP carboxykinase", "PFK-1"], answer: 2 },
+      { q: "Match the enzyme to the reaction: fructose-1,6-bisphosphate to fructose-6-phosphate", options: ["FBPase-1", "PFK-1", "PFK-2", "Aldolase"], answer: 0 },
+      { q: "Match the enzyme to the reaction: glucose-6-phosphate to glucose", options: ["Glucokinase", "Glucose-6-phosphatase", "Phosphoglucomutase", "Glycogen synthase"], answer: 1 },
+      { q: "Gluconeogenesis from pyruvate to glucose requires:", options: ["Less energy than glycolysis", "4 ATP, 2 GTP, and 2 NADH", "2 ATP only", "2 ATP, 2 NADPH, and 1 GTP"], answer: 1 },
+      { q: "Why cannot bypass reaction 1 simply be the reverse of pyruvate kinase?", options: ["Pyruvate kinase is located in the ER", "The glycolytic step is effectively irreversible", "Pyruvate cannot bind enzymes", "PEP cannot be formed in cells"], answer: 1 },
+      { q: "Why cannot bypass reaction 2 simply be the reverse of PFK-1?", options: ["PFK-1 only works in muscle", "The glycolytic step is effectively irreversible and needs a phosphatase bypass", "Fructose-6-phosphate cannot exist in liver", "ATP cannot be used in glycolysis"], answer: 1 },
+      { q: "Why cannot bypass reaction 3 simply be the reverse of hexokinase?", options: ["Hexokinase is inactive in liver", "The glycolytic phosphorylation step is effectively irreversible and requires glucose-6-phosphatase", "Glucose cannot leave the cell", "Glucose-6-phosphate has no phosphate"], answer: 1 }
+    ];
+
+    let quizQuestions = [];
+    let currentIndex = 0;
+    let selectedAnswers = [];
+
+    const startBtn = document.getElementById("startBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const submitBtn = document.getElementById("submitBtn");
+    const reviewBtn = document.getElementById("reviewBtn");
+
+    const quizArea = document.getElementById("quizArea");
+    const resultArea = document.getElementById("resultArea");
+    const reviewArea = document.getElementById("reviewArea");
+
+    const questionText = document.getElementById("questionText");
+    const optionsContainer = document.getElementById("optionsContainer");
+    const progressText = document.getElementById("progressText");
+    const scoreText = document.getElementById("scoreText");
+    const finalScore = document.getElementById("finalScore");
+    const finalPercent = document.getElementById("finalPercent");
+
+    function shuffleArray(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+      }
+      return arr;
+    }
+
+    function buildQuiz() {
+      const shuffleQuestions = document.getElementById("shuffleQuestions").checked;
+      const shuffleChoices = document.getElementById("shuffleChoices").checked;
+
+      quizQuestions = questions.map(q => ({
+        prompt: q.q,
+        answerText: q.options[q.answer],
+        options: [...q.options]
+      }));
+
+      if (shuffleChoices) {
+        quizQuestions = quizQuestions.map(q => ({
+          prompt: q.prompt,
+          answerText: q.answerText,
+          options: shuffleArray(q.options)
+        }));
+      }
+
+      if (shuffleQuestions) {
+        quizQuestions = shuffleArray(quizQuestions);
+      }
+
+      selectedAnswers = new Array(quizQuestions.length).fill(null);
+      currentIndex = 0;
+    }
+
+    function renderQuestion() {
+      const q = quizQuestions[currentIndex];
+      if (!q) return;
+
+      progressText.textContent = "Question " + (currentIndex + 1) + " / " + quizQuestions.length;
+      scoreText.textContent = "Answered: " + selectedAnswers.filter(v => v !== null).length;
+      questionText.textContent = q.prompt;
+      optionsContainer.innerHTML = "";
+
+      q.options.forEach((option, index) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.type = "button";
+        btn.textContent = String.fromCharCode(65 + index) + ". " + option;
+
+        if (selectedAnswers[currentIndex] === index) {
+          btn.classList.add("selected");
+        }
+
+        btn.onclick = function () {
+          selectedAnswers[currentIndex] = index;
+          renderQuestion();
+        };
+
+        optionsContainer.appendChild(btn);
+      });
+
+      prevBtn.disabled = currentIndex === 0;
+      if (currentIndex === quizQuestions.length - 1) {
+        nextBtn.classList.add("hidden");
+        submitBtn.classList.remove("hidden");
+      } else {
+        nextBtn.classList.remove("hidden");
+        submitBtn.classList.add("hidden");
+      }
+    }
+
+    function startQuiz() {
+      buildQuiz();
+      quizArea.classList.remove("hidden");
+      resultArea.classList.add("hidden");
+      reviewArea.classList.add("hidden");
+      reviewArea.innerHTML = "";
+      renderQuestion();
+    }
+
+    function calculateResults() {
+      let correct = 0;
+      for (let i = 0; i < quizQuestions.length; i++) {
+        const selectedIndex = selectedAnswers[i];
+        if (selectedIndex !== null && quizQuestions[i].options[selectedIndex] === quizQuestions[i].answerText) {
+          correct++;
+        }
+      }
+      return correct;
+    }
+
+    function submitQuiz() {
+      const correct = calculateResults();
+      const total = quizQuestions.length;
+      const percent = ((correct / total) * 100).toFixed(1);
+
+      finalScore.textContent = "Score: " + correct + " / " + total;
+      finalPercent.textContent = "Percent: " + percent + "%";
+      resultArea.classList.remove("hidden");
+      reviewArea.classList.add("hidden");
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    }
+
+    function reviewWrongAnswers() {
+      reviewArea.innerHTML = "";
+      let wrongCount = 0;
+
+      for (let i = 0; i < quizQuestions.length; i++) {
+        const q = quizQuestions[i];
+        const selectedIndex = selectedAnswers[i];
+        const selectedText = selectedIndex === null ? "No answer selected" : q.options[selectedIndex];
+        const isCorrect = selectedIndex !== null && q.options[selectedIndex] === q.answerText;
+
+        if (!isCorrect) {
+          wrongCount++;
+          const div = document.createElement("div");
+          div.className = "review-item";
+          div.innerHTML =
+            "<h3>Question " + (i + 1) + "</h3>" +
+            "<p><strong>" + q.prompt + "</strong></p>" +
+            "<p class='incorrect'>Your answer: " + selectedText + "</p>" +
+            "<p class='correct'>Correct answer: " + q.answerText + "</p>";
+          reviewArea.appendChild(div);
+        }
+      }
+
+      if (wrongCount === 0) {
+        reviewArea.innerHTML = "<div class='review-item'><p class='correct'>Perfect score. No wrong answers to review.</p></div>";
+      }
+
+      reviewArea.classList.remove("hidden");
+    }
+
+    startBtn.onclick = startQuiz;
+    restartBtn.onclick = startQuiz;
+
+    prevBtn.onclick = function () {
+      if (currentIndex > 0) {
+        currentIndex--;
+        renderQuestion();
+      }
+    };
+
+    nextBtn.onclick = function () {
+      if (currentIndex < quizQuestions.length - 1) {
+        currentIndex++;
+        renderQuestion();
+      }
+    };
+
+    submitBtn.onclick = submitQuiz;
+    reviewBtn.onclick = reviewWrongAnswers;
+  </script>
+</body>
+</html>
