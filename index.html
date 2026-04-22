@@ -43,23 +43,37 @@
       gap: 12px;
       margin: 18px 0;
     }
-    
-.option-btn {
-  width: 100%;
-  text-align: left;
-  padding: 14px 16px;
-  border: 2px solid #cbd5e1;
-  background: #fff;
-  color: #111827;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 16px;
-}
+    .option-btn {
+      width: 100%;
+      text-align: left;
+      padding: 14px 16px;
+      border: 2px solid #cbd5e1;
+      background: #fff;
+      color: #111827;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 16px;
     }
     .option-btn:hover { border-color: #64748b; }
     .option-btn.selected {
       border-color: #2563eb;
       background: #eff6ff;
+    }
+    .option-btn.correct-choice {
+      border-color: #166534;
+      background: #dcfce7;
+      color: #166534;
+      font-weight: bold;
+    }
+    .option-btn.wrong-choice {
+      border-color: #b91c1c;
+      background: #fee2e2;
+      color: #b91c1c;
+      font-weight: bold;
+    }
+    .option-btn:disabled {
+      cursor: not-allowed;
+      opacity: 1;
     }
     button {
       border: none;
@@ -91,6 +105,20 @@
       color: #b91c1c;
       font-weight: bold;
     }
+    .feedback {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-weight: bold;
+    }
+    .feedback.correct {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .feedback.incorrect {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
     footer {
       margin-top: 18px;
       color: #475569;
@@ -120,12 +148,13 @@
     <section id="quizArea" class="hidden">
       <div class="status card">
         <div id="progressText">Question 1 / 42</div>
-        <div id="scoreText">Answered: 0</div>
+        <div id="scoreText">Score: 0</div>
       </div>
 
       <div class="card">
         <h2 id="questionText"></h2>
         <div id="optionsContainer" class="options"></div>
+        <div id="feedbackBox" class="hidden"></div>
         <div class="nav-row">
           <button id="prevBtn" type="button" class="secondary">Previous</button>
           <button id="nextBtn" type="button">Next</button>
@@ -145,7 +174,7 @@
     </section>
 
     <footer>
-      <p>Single-file version for GitHub Pages.</p>
+      <p>Instant feedback version.</p>
     </footer>
   </div>
 
@@ -198,6 +227,8 @@
     let quizQuestions = [];
     let currentIndex = 0;
     let selectedAnswers = [];
+    let answeredQuestions = [];
+    let score = 0;
 
     const startBtn = document.getElementById("startBtn");
     const restartBtn = document.getElementById("restartBtn");
@@ -216,6 +247,7 @@
     const scoreText = document.getElementById("scoreText");
     const finalScore = document.getElementById("finalScore");
     const finalPercent = document.getElementById("finalPercent");
+    const feedbackBox = document.getElementById("feedbackBox");
 
     function shuffleArray(array) {
       const arr = [...array];
@@ -251,17 +283,25 @@
       }
 
       selectedAnswers = new Array(quizQuestions.length).fill(null);
+      answeredQuestions = new Array(quizQuestions.length).fill(false);
       currentIndex = 0;
+      score = 0;
+    }
+
+    function updateTopBar() {
+      progressText.textContent = "Question " + (currentIndex + 1) + " / " + quizQuestions.length;
+      scoreText.textContent = "Score: " + score;
     }
 
     function renderQuestion() {
       const q = quizQuestions[currentIndex];
       if (!q) return;
 
-      progressText.textContent = "Question " + (currentIndex + 1) + " / " + quizQuestions.length;
-      scoreText.textContent = "Answered: " + selectedAnswers.filter(v => v !== null).length;
+      updateTopBar();
       questionText.textContent = q.prompt;
       optionsContainer.innerHTML = "";
+      feedbackBox.className = "hidden";
+      feedbackBox.textContent = "";
 
       q.options.forEach((option, index) => {
         const btn = document.createElement("button");
@@ -269,26 +309,80 @@
         btn.type = "button";
         btn.textContent = String.fromCharCode(65 + index) + ". " + option;
 
-        if (selectedAnswers[currentIndex] === index) {
-          btn.classList.add("selected");
+        const alreadyAnswered = answeredQuestions[currentIndex];
+        const selectedIndex = selectedAnswers[currentIndex];
+        const correctIndex = q.options.indexOf(q.answerText);
+
+        if (alreadyAnswered) {
+          btn.disabled = true;
+
+          if (index === correctIndex) {
+            btn.classList.add("correct-choice");
+          }
+
+          if (selectedIndex === index && selectedIndex !== correctIndex) {
+            btn.classList.add("wrong-choice");
+          }
+
+          if (selectedIndex === index && selectedIndex === correctIndex) {
+            btn.classList.add("selected");
+          }
         }
 
         btn.onclick = function () {
+          if (answeredQuestions[currentIndex]) return;
+
           selectedAnswers[currentIndex] = index;
+          answeredQuestions[currentIndex] = true;
+
+          if (q.options[index] === q.answerText) {
+            score++;
+          }
+
+          showFeedback();
           renderQuestion();
         };
 
         optionsContainer.appendChild(btn);
       });
 
+      if (answeredQuestions[currentIndex]) {
+        showFeedback();
+      }
+
       prevBtn.disabled = currentIndex === 0;
+      nextBtn.disabled = !answeredQuestions[currentIndex] || currentIndex === quizQuestions.length - 1;
+
       if (currentIndex === quizQuestions.length - 1) {
         nextBtn.classList.add("hidden");
         submitBtn.classList.remove("hidden");
+        submitBtn.disabled = !answeredQuestions[currentIndex];
       } else {
         nextBtn.classList.remove("hidden");
         submitBtn.classList.add("hidden");
       }
+    }
+
+    function showFeedback() {
+      const q = quizQuestions[currentIndex];
+      const selectedIndex = selectedAnswers[currentIndex];
+      const selectedText = q.options[selectedIndex];
+      const correctText = q.answerText;
+
+      feedbackBox.classList.remove("hidden");
+      feedbackBox.classList.add("feedback");
+
+      if (selectedText === correctText) {
+        feedbackBox.classList.remove("incorrect");
+        feedbackBox.classList.add("correct");
+        feedbackBox.textContent = "Correct";
+      } else {
+        feedbackBox.classList.remove("correct");
+        feedbackBox.classList.add("incorrect");
+        feedbackBox.textContent = "Wrong. Correct answer: " + correctText;
+      }
+
+      updateTopBar();
     }
 
     function startQuiz() {
@@ -300,23 +394,11 @@
       renderQuestion();
     }
 
-    function calculateResults() {
-      let correct = 0;
-      for (let i = 0; i < quizQuestions.length; i++) {
-        const selectedIndex = selectedAnswers[i];
-        if (selectedIndex !== null && quizQuestions[i].options[selectedIndex] === quizQuestions[i].answerText) {
-          correct++;
-        }
-      }
-      return correct;
-    }
-
     function submitQuiz() {
-      const correct = calculateResults();
       const total = quizQuestions.length;
-      const percent = ((correct / total) * 100).toFixed(1);
+      const percent = ((score / total) * 100).toFixed(1);
 
-      finalScore.textContent = "Score: " + correct + " / " + total;
+      finalScore.textContent = "Score: " + score + " / " + total;
       finalPercent.textContent = "Percent: " + percent + "%";
       resultArea.classList.remove("hidden");
       reviewArea.classList.add("hidden");
@@ -364,7 +446,7 @@
     };
 
     nextBtn.onclick = function () {
-      if (currentIndex < quizQuestions.length - 1) {
+      if (currentIndex < quizQuestions.length - 1 && answeredQuestions[currentIndex]) {
         currentIndex++;
         renderQuestion();
       }
